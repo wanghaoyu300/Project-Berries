@@ -1,0 +1,229 @@
+---
+title: "Berries"
+author: "Haoyu Wang"
+date: "10/16/2020"
+output: 
+  html_document: 
+    theme: cerulean
+    toc_depth: 5
+    toc: yes
+    toc_float: TRUE
+    df_print: paged
+---
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+library(knitr)
+library(tidyverse)
+library(magrittr)
+library(kableExtra)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+#  Introduction
+As discussed in class, we're going to wrap up Unit 1 by doing the "berries" dataset. What we need is to combine data cleaning, data organization, and EDA. Also, we need to visualize the data.
+
+These data were collected from the USDA database selector: <a href="https://quickstats.nass.usda.gov">https://quickstats.nass.usda.gov</a>
+
+The data were <a href="https://quickstats.nass.usda.gov/results/D416E96E-3D5C-324C-9334-1D38DF88FFF1">stored online</a> and then downloaded as a CSV file.
+
+\newpage
+# Load and select meaningful data
+After loading the data, we can see there are 21 columns who have no data or only single vale in some columns. Here are the columns names of unique value so that we can eliminate:
+```{r}
+## read the data
+
+ag_data <- read_csv("berries.csv", col_names = TRUE)
+
+## look at number of unique values in each column
+ag_data %>% summarize_all(n_distinct) -> aa
+
+
+## make a list of the columns with only one unique value
+bb <- which(aa[1,]==1)
+
+## list the 1-unique value column names 
+cn <- colnames(ag_data)[bb]
+
+cn
+```
+<br>
+
+Then we can eliminate the single value columns. The berries data had only 8 out of 21 columns containing meaningful data.
+```{r}
+## remove the 1-unique columns from the dataset
+ag_data %<>% select(-all_of(bb))
+
+aa %<>% select(-all_of(bb)) 
+
+
+## State name and the State ANSI code are (sort of) redundant
+## Just keep the name
+ag_data %<>% select(-4)
+aa %<>% select(-4) 
+
+
+kable(head(ag_data, n = 10)) %>%
+  kable_styling(font_size = 10)
+```
+<hr>
+<br>
+\newpage
+# Strawberries
+Since we need to clean and organize the dataset, we need to know how many kinds of berries we need to seperate.
+```{r}
+berry <- unique(ag_data$Commodity)
+berry
+```
+<br>
+
+As we can see, there are three types of berries in this data set: blueberries, raspberries, and strawberries. Here I will choose strawberries.
+```{r}
+strawberry <- ag_data %>% filter((Commodity == "STRAWBERRIES") & (Period== "YEAR"))
+strawberry %<>% select(-c(Period, Commodity))
+kable(head(strawberry, n = 10)) %>%
+  kable_styling(font_size=10)
+```
+<hr>
+<br>
+
+\newpage
+## Clean and organize data
+
+<br>
+
+### Separate colums
+From the table above, each row of 'Data Item' column has different information. In order to make the table look more organized, we need separate this column.Next, repeat eliminating unique column and doing NA replacment by using blank.
+
+```{r}
+strawberry %<>% separate(`Data Item`, c("B","lab2", "lab3", "lab4"), sep = ",")
+strawberry %<>% separate(B, c("S", "lab1"), "-")
+strawberry %<>% select(-S)
+strawberry[is.na(strawberry)] <- " "
+kable(head(strawberry, n = 10)) %>%
+  kable_styling(font_size=10)
+```
+<hr>
+<br>
+\newpage
+
+### Organize data 
+
+1. Check each column.
+```{r}
+unique(strawberry$lab1)
+```
+```{r}
+unique(strawberry$lab2)
+```
+
+```{r}
+unique(strawberry$lab3)
+```
+
+```{r}
+unique(strawberry$lab4)
+```
+<br>
+
+2. Note that we have entries in both the "lab2" and "lab3" columns that begin with "MEASURED", and we also have entries in both the "lab3" and "lab4" columns that begin with "MEASURED". We need to put them together in the same column, i.e., all the enreies that begin with "MEASURED" should be in "lab3" column. We have the new table below:
+```{r}
+f1 <- function(a,b){
+  if(a){
+    return(b)
+  }else{
+      return("")
+  }
+}
+
+## Do with lab3
+index_lab3 <- str_detect(strawberry $ lab3, " UTILIZED - PRODUCTION")
+strawberry %<>% mutate(u_in_1 = unlist(map2(index_lab3, strawberry $ lab3, f1)))
+strawberry %<>% mutate(lab3 = str_replace(strawberry $ lab3, " UTILIZED - PRODUCTION", ""))
+strawberry %<>% mutate(lab2 = str_trim(paste(lab2, u_in_1)))
+
+## Do with lab2
+index_lab2 <- str_detect(strawberry$lab2, "MEASURED IN")
+strawberry %<>% mutate(m_in_1 = unlist(map2(index_lab2, strawberry $ lab2, f1)))
+strawberry %<>% mutate(lab2 = str_replace(strawberry $ lab2, "MEASURED IN.*$", ""))
+strawberry %<>% mutate(lab3 = str_trim(paste(lab3, m_in_1)))
+# strawberry $ lab3 <- paste(strawberry $ m_in_1, strawberry $ lab3)
+
+## Do with lab4
+index_lab4 <- str_detect(strawberry$lab4, "MEASURED IN")
+strawberry %<>% mutate(m_in_2 = unlist(map2(index_lab4, strawberry $ lab4, f1)))
+strawberry %<>% mutate(lab4 = str_replace(strawberry $ lab4, "MEASURED IN.*$", ""))
+strawberry %<>% mutate(lab3 = str_trim(paste(lab3, m_in_2)))
+# strawberry $ lab3 <- paste(strawberry $ m_in_2, strawberry $ lab3)
+
+strawberry %<>% select(-c(u_in_1, m_in_1, m_in_2 ))
+
+kable(head(strawberry, n = 10)) %>%
+  kable_styling(font_size=10)
+```
+<hr>
+<br>
+
+3. Check column "lab2", "lab3" and "lab4" to make sure we did it right. There is no "UTILIZED - PRODUCTION" in "lab3" and all mesurments are in "lab3".
+```{r}
+unique(strawberry$lab2)
+```
+
+```{r}
+unique(strawberry$lab3)
+```
+
+```{r}
+unique(strawberry$lab4)
+```
+
+<br>
+
+Next, let's move to colum "Domain" and "Domian Category". First, do the separation with those two columns. Next, remove redundant columns. 
+```{r}
+strawberry %<>% separate(Domain, c("D_left", "D_right"), sep = ", ")
+strawberry[is.na(strawberry)] <- " "
+
+strawberry %<>% separate(`Domain Category`, c("DC_left", "DC_right"), sep = ", ")
+strawberry %<>% separate(DC_left, c("DC_left_l", "DC_left_r"), sep = ": ")
+strawberry %<>% separate(DC_right, c("DC_right_l", "DC_right_r"), sep = ": ") 
+strawberry[is.na(strawberry)] <- " "
+
+strawberry %<>%  select(-DC_left_l) 
+strawberry %<>% select(-DC_right_l)
+
+strawberry %<>% mutate(D_left = "CHEMICAL", D_left = "") 
+
+
+strawberry %<>% mutate(Chemical=paste(D_left, D_right)) 
+
+strawberry %<>% select(-c(D_left, D_right)) 
+
+strawberry %<>% select(Year, State, lab1, lab2, lab3, lab4, DC_left_r, DC_right_r, Chemical, Value )
+
+```
+
+Then clean it up and rename the columns.
+```{r}
+strawberry $ lab1 <- paste(strawberry $ lab1, strawberry $ lab2)
+
+strawberry %<>% select(-lab2)
+                         
+strawberry %<>% rename(Production = lab1,
+                       Measurement = lab3,
+                       Avg = lab4,
+                       Chem_family = DC_left_r,
+                       Materials = DC_right_r,
+                       )
+
+
+strawberry %<>% mutate(Chemical = str_trim(paste(Chem_family, Chemical)))
+
+strawberry %<>% select(-Chem_family)
+
+kable(head(strawberry, n = 10)) %>%
+  kable_styling(font_size=10)
+```
+<hr>
+<br>
+
+
+
