@@ -241,4 +241,16 @@ p1 <- ggplot(df, aes(x = Chemical, y = Value, fill = State)) +
         facet_wrap(~Chemical,scales = "free")
 p1
 ```
+<br>
 
+# Citations
+
+Class recording 11, 14-18, MA615
+
+http://rstudio.github.io/shiny/tutorial/
+
+https://shiny.rstudio.com/tutorial/
+
+Edwin de Jonge, Mark van der Loo, An introduction to data cleaning with R.
+
+Garrett Grolemund, Hadley Wickham, R for Data Science, https://r4ds.had.co.nz/
