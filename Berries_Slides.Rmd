@@ -1,0 +1,66 @@
+---
+title: "Berries_Slides"
+author: "Haoyu Wang"
+date: "10/18/2020"
+output:
+  powerpoint_presentation: default
+  slidy_presentation: default
+  ioslides_presentation: default
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(tidyverse)
+library(magrittr)
+library(kableExtra)
+library(png)
+library(grid)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+## Introduction
+
+As discussed in class, we're going to wrap up Unit 1 by doing the "berries" dataset. What we need is to combine data cleaning, data organization, and EDA. Also, we need to visualize the data.
+
+These data were collected from the USDA database selector: <a href="https://quickstats.nass.usda.gov">https://quickstats.nass.usda.gov</a>
+
+The data were <a href="https://quickstats.nass.usda.gov/results/D416E96E-3D5C-324C-9334-1D38DF88FFF1">stored online</a> and then downloaded as a CSV file.
+
+## Data cleaning and organizing
+
+Main Steps:
+- Load and select meaningful data, find the columns that can be eliminated.
+
+- Choose "STRAWBERRIES" for the futher steps.
+
+- Separate columns
+
+- Organize the data
+
+## Outpus for these steps
+
+```{r, echo = FALSE}
+img = readPNG("Pic1.png")
+grid.raster(img)
+```
+
+##    
+```{r, echo = FALSE}
+img = readPNG("Pic2.png")
+grid.raster(img)
+```
+
+##
+
+```{r, echo=FALSE}
+img = readPNG("Pic3.png")
+grid.raster(img)
+```
+
+## EDA(Exploratory Data Analysis)
+
+```{r}
+img = readPNG("Pic4.png")
+grid.raster(img)
+```
+

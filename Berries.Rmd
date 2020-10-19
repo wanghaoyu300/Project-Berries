@@ -25,7 +25,7 @@ These data were collected from the USDA database selector: <a href="https://quic
 
 The data were <a href="https://quickstats.nass.usda.gov/results/D416E96E-3D5C-324C-9334-1D38DF88FFF1">stored online</a> and then downloaded as a CSV file.
 
-\newpage
+
 # Load and select meaningful data
 After loading the data, we can see there are 21 columns who have no data or only single vale in some columns. Here are the columns names of unique value so that we can eliminate:
 ```{r}
@@ -225,5 +225,20 @@ kable(head(strawberry, n = 10)) %>%
 <hr>
 <br>
 
+# EDA(Exploratory Data Analysis)
 
+Let's look at chemicals being applied to food.
+```{r}
+df <- strawberry %<>% filter(Production=="  BEARING - APPLICATIONS") 
+df %<>% filter(Value != "(D)")
+df %<>% filter(Value !=  "(NA)")
+df %<>% filter(Value !=  "(Z)")
+
+df %<>% filter(Measurement == "MEASURED IN NUMBER")
+df$Value <- as.numeric(df$Value)
+p1 <- ggplot(df, aes(x = Chemical, y = Value, fill = State)) + 
+        geom_boxplot() +
+        facet_wrap(~Chemical,scales = "free")
+p1
+```
 
